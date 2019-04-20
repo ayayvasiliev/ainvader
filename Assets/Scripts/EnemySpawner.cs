@@ -18,7 +18,6 @@ public class EnemySpawner : MonoBehaviour {
 	
 
 	private void Spawn() {
-
 		//for (int _ = 0; _ < 10; _++)
 		if (enemies.Count == 0)
 		{

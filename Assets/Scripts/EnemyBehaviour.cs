@@ -8,6 +8,11 @@ public class EnemyBehaviour : MonoBehaviour {
 	private float[] weights;
 	private float[] outputs;
 
+	private bool inited = false;
+
+	public bool Init {
+		set { inited = true; }
+	}
 
 	public float this[int i] {
 		set { inputs[i % inputs.Length] = value; }
@@ -19,7 +24,7 @@ public class EnemyBehaviour : MonoBehaviour {
 	void Start () {
 		inputs = new float[5];
 		outputs = new float[3];
-		weights = new float[inputs.Lenght * outputs.Lenght];
+		weights = new float[inputs.Length * outputs.Length];
 	}
 	// Update is called once per frame
 	void Update () {
@@ -28,22 +33,21 @@ public class EnemyBehaviour : MonoBehaviour {
 	
 	
 	void SetWeight(int inputIndex, int outputIndex, float value) {
-		weights[inputIndex % inputs.Lenght + (outputIndex % outputs.Lenght) * inputs.Lenght] = value;
+		weights[inputIndex % inputs.Length + (outputIndex % outputs.Length) * inputs.Length] = value;
 	}
 	float GetWeight(int inputIndex, int outputIndex) {
-		return weights[inputIndex % inputs.Lenght + (outputIndex % outputs.Lenght) * inputs.Lenght];
+		return weights[inputIndex % inputs.Length + (outputIndex % outputs.Length) * inputs.Length];
 	}
 
-	private static float Sigmoid(double value) {
-		float k = Math.Exp(value);
+	private static float Sigmoid(float value) {
+		float k = System.Convert.ToSingle(System.Math.Exp(value));
 		return k / (1.0f + k);
 	}
 
 	private void Calc() {
-		for (int i = 0; i < outputs.Lenght; i++)
-		{
-			double value = 0.0;
-			for (int j = 0; j < inputs.Lenght; j++)
+		for (int i = 0; i < outputs.Length; i++) {
+			float value = 0.0f;
+			for (int j = 0; j < inputs.Length; j++)
 				value = this[j] * GetWeight(j, i);
 			this[i] = Sigmoid(value);
 		}

@@ -5,8 +5,13 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour {
 
     public Animator animator;
-    private Vector3 lastVector;
+    private Vector3 lastVector, movement;
+    public int speed;
 
+    private bool left = false;
+    private bool right= false;
+    private bool top = false;
+    private bool bottom = false;
 
     private void Start()
     {
@@ -14,15 +19,63 @@ public class PlayerMovement : MonoBehaviour {
         lastVector.y = -1;
     }
 
-    // Update is called once per frame
-    void Update () {
+    void OnGUI() {
 
-        Vector3 movement = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
+        {
+            Event e = Event.current;
+            if (e.type
+                == EventType.KeyDown)
+            {
+                switch (e.keyCode)
+                {
+                    case KeyCode.W:
+                        top = true;
+                        break;
+                    case KeyCode.A:
+                        left = true;
+                        break;
+                    case KeyCode.S:
+                        bottom = true;
+                        break;
+                    case KeyCode.D:
+                        right = true;
+                        break;
+                }
+            }
+            else if (e.type
+                == EventType.KeyUp)
+            {
+                switch (e.keyCode)
+                {
+                    case KeyCode.W:
+                        top = false;
+                        break;
+                    case KeyCode.A:
+                        left = false;
+                        break;
+                    case KeyCode.S:
+                        bottom = false;
+                        break;
+                    case KeyCode.D:
+                        right = false;
+                        break;
+                }
+            }
+        }
+
+
+    }
+
+    private void Update()
+    {
+        movement = new Vector3((left ? -1 : 0) + (right ? 1 : 0), (top ? 1 : 0) + (bottom ? -1 : 0), 0);
+        movement.Normalize();
+
 
         if (Input.anyKey != false)
         {
-            lastVector.x = movement.x;
             lastVector.y = movement.y;
+            lastVector.x = movement.x;
         }
 
         animator.SetFloat("Horizontal", movement.x);
@@ -34,12 +87,8 @@ public class PlayerMovement : MonoBehaviour {
             animator.SetFloat("Horizontal", lastVector.x);
             animator.SetFloat("Vertical", lastVector.y);
 
-            Debug.Log(lastVector.x + " " + lastVector.y + " | " + animator.GetFloat("Horizontal") + " " + animator.GetFloat("Vertical"));
         }
 
-        
-
-        transform.position = transform.position + movement * Time.deltaTime * 3;   
-
+        transform.position = transform.position + movement * Time.deltaTime * speed;
     }
 }

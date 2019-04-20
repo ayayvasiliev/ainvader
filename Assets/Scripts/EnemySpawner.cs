@@ -17,7 +17,7 @@ public class EnemySpawner : MonoBehaviour {
 
 	private void spawn() {
 
-		if (enemies.Length != 0)
+		if (enemies.Count != 0)
 			return;
         enemies.Add((GameObject)Instantiate(enemy, this.gameObject.transform.position, this.gameObject.transform.rotation));
 	}

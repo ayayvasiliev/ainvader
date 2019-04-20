@@ -4,38 +4,71 @@ using UnityEngine;
 
 public class EnemyBehaviour : MonoBehaviour {
 
-	private float[] inputs;
-	private float[] weights;
-	private float[] outputs;
+	private float[] inputs = new float[EnemyPerceptronSize.InputLayerSize];
+	private float[] weights = new float[EnemyPerceptronSize.InputLayerSize * EnemyPerceptronSize.OutputLayerSize];
+	private float[] outputs = new float[EnemyPerceptronSize.OutputLayerSize];
 
 	private bool inited = false;
 
-	public bool Init {
-		set { inited = true; }
-	}
+	private float rot = 0.0f;
+	private float x = 0.0f, y = 0.0f;
 
-	public float this[int i] {
-		set { inputs[i % inputs.Length] = value; }
-		get { return outputs[i % outputs.Length]; }
+
+	public void Init() {
+		inited = true;
 	}
 
 
 	// Use this for initialization
-	void Start () {
-		inputs = new float[5];
-		outputs = new float[3];
-		weights = new float[inputs.Length * outputs.Length];
+	void Start () {		
+		x = this.gameObject.transform.position.x;
+		y = this.gameObject.transform.position.y;
+		rot = 0.0f;
 	}
 	// Update is called once per frame
 	void Update () {
-		
+		if (inited)
+		{
+			// Update inputs
+			inputs[0] = 5 - y;
+			inputs[1] = 5 + x;
+			inputs[2] = 5 + y;
+			inputs[3] = 5 - x;
+			inputs[4] = rot;
+
+			// Update outputs
+			Calc();
+
+			Debug.Log("Perceptron " + outputs[0].ToString() + " " + outputs[1].ToString());
+
+			// Accept outputs
+			float dt = Time.deltaTime;
+			rot += outputs[0] * dt;
+			x -= outputs[1] * (float)System.Math.Sin(rot) * dt;
+			y += outputs[1] * (float)System.Math.Cos(rot) * dt;
+			if (x > 5)
+				x = 5;
+			if (x < -5)
+				x = -5;
+			if (y > 5)
+				y = 5;
+			if (y < -5)
+				y = -5;
+			
+			Debug.Log(dt.ToString() + "    " + x.ToString() + " " + y.ToString());
+
+			// Affect to GameObject
+			this.gameObject.transform.position = new Vector3(x, y, 0);
+			this.gameObject.transform.rotation = new Quaternion(0, 0, 180.0f * rot / (float)System.Math.PI, 0);
+			//this.gameObject.transform.rotation = Quaternion(0, 0, 180.0f * rot / (float)System.Math.PI, 0);
+		}
 	}
 	
 	
-	void SetWeight(int inputIndex, int outputIndex, float value) {
+	public void SetWeight(int inputIndex, int outputIndex, float value) {
 		weights[inputIndex % inputs.Length + (outputIndex % outputs.Length) * inputs.Length] = value;
 	}
-	float GetWeight(int inputIndex, int outputIndex) {
+	public float GetWeight(int inputIndex, int outputIndex) {
 		return weights[inputIndex % inputs.Length + (outputIndex % outputs.Length) * inputs.Length];
 	}
 
@@ -47,9 +80,10 @@ public class EnemyBehaviour : MonoBehaviour {
 	private void Calc() {
 		for (int i = 0; i < outputs.Length; i++) {
 			float value = 0.0f;
-			for (int j = 0; j < inputs.Length; j++)
-				value = this[j] * GetWeight(j, i);
-			this[i] = Sigmoid(value);
+			for (int j = 0; j < inputs.Length; j++) {
+				value += inputs[j] * GetWeight(j, i);
+			}
+			outputs[i] = Sigmoid(value);
 		}
 	}
 }

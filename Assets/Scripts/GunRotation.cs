@@ -20,6 +20,11 @@ public class GunRotation : MonoBehaviour {
     private SpriteRenderer tempRend;
 
 
+    public float Angle {
+        get { return angle; }
+    }
+
+
     void Start ()
     {
         tempRend = GetComponent<SpriteRenderer>();
@@ -36,8 +41,6 @@ public class GunRotation : MonoBehaviour {
         angle = Mathf.Atan2(mouse_pos.y, mouse_pos.x) * Mathf.Rad2Deg;
         
 
-
-        Debug.Log(angle);
 
         if (angle >= 67.5 && angle < 112.5)
         {

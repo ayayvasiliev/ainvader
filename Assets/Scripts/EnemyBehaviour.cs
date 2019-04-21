@@ -4,14 +4,22 @@ using UnityEngine;
 
 public class EnemyBehaviour : MonoBehaviour {
 
-	private float[] inputs = new float[EnemyPerceptronSize.InputLayerSize];
-	private float[] weights = new float[EnemyPerceptronSize.InputLayerSize * EnemyPerceptronSize.OutputLayerSize];
-	private float[] outputs = new float[EnemyPerceptronSize.OutputLayerSize];
+	public float health = 100.0f;
+	public bool dead = false;
+
+	private NeuralCell[] perceptron;
+	private InputNeuron[] inputLayer;
+	private Neuron[] hiddenLayer;
+	private Neuron[] outputLayer;
 
 	private bool inited = false;
 
-	private float rot = 0.0f;
+	private float rotation = 0.0f;
+	private float direction = 0.0f;
 	private float x = 0.0f, y = 0.0f;
+
+
+	static private float width = 2.0f, height = 2.0f;
 
 
 	public void Init() {
@@ -19,71 +27,113 @@ public class EnemyBehaviour : MonoBehaviour {
 	}
 
 
+	public EnemyBehaviour() : base() {
+		perceptron = new NeuralCell[EnemyPerceptronTopology.InputLayerSize + EnemyPerceptronTopology.HiddenLayerSize + EnemyPerceptronTopology.OutputLayerSize];
+		inputLayer = new InputNeuron[EnemyPerceptronTopology.InputLayerSize];
+		for (int i = 0; i < EnemyPerceptronTopology.InputLayerSize; i++)
+			perceptron[i] = inputLayer[i] = new InputNeuron();
+		hiddenLayer = new Neuron[EnemyPerceptronTopology.HiddenLayerSize];
+		NeuralCell.Synapse[] syns;
+		for (int i = 0; i < EnemyPerceptronTopology.HiddenLayerSize; i++) {
+			syns = new NeuralCell.Synapse[EnemyPerceptronTopology.HiddenLayer[i].Size];
+			for (int j = 0; j < EnemyPerceptronTopology.HiddenLayer[i].Size; j++)
+				syns[j] = new NeuralCell.Synapse { cell = perceptron[EnemyPerceptronTopology.HiddenLayer[i][j]], weight = 0.0f };
+			perceptron[EnemyPerceptronTopology.InputLayerSize + i] = hiddenLayer[i] = new Neuron(syns);
+		}
+		outputLayer = new Neuron[EnemyPerceptronTopology.OutputLayerSize];
+		for (int i = 0; i < EnemyPerceptronTopology.OutputLayerSize; i++) {
+			syns = new NeuralCell.Synapse[EnemyPerceptronTopology.OutputLayer[i].Size];
+			for (int j = 0; j < EnemyPerceptronTopology.OutputLayer[i].Size; j++)
+				syns[j] = new NeuralCell.Synapse { cell = perceptron[EnemyPerceptronTopology.OutputLayer[i][j]], weight = 0.0f };
+			perceptron[EnemyPerceptronTopology.InputLayerSize + EnemyPerceptronTopology.HiddenLayerSize + i] = outputLayer[i] = new Neuron(syns);
+		}
+	}
+
+
 	// Use this for initialization
 	void Start () {		
 		x = this.gameObject.transform.position.x;
 		y = this.gameObject.transform.position.y;
-		rot = 0.0f;
+		rotation = 0.0f;
+		direction = 0.0f;
 	}
 	// Update is called once per frame
 	void Update () {
-		if (inited)
+		if (health < 0)
+			dead = true;
+		if (inited && !dead)
 		{
 			// Update inputs
-			inputs[0] = 5 - y;
-			inputs[1] = 5 + x;
-			inputs[2] = 5 + y;
-			inputs[3] = 5 - x;
-			inputs[4] = rot;
+			inputLayer[0].Set = (2 - y) / 4.0f;
+			inputLayer[1].Set = (2 + x) / 4.0f;
+			inputLayer[2].Set = (2 + y) / 4.0f;
+			inputLayer[3].Set = (2 - x) / 4.0f;
+			inputLayer[4].Set = direction;
+			inputLayer[5].Set = rotation;
+
+			Vector3 playerRelative = GameObject.Find("Player").transform.position - this.gameObject.transform.position;
+			playerRelative.z = 0.0f;
+			inputLayer[6].Set = System.Convert.ToSingle(System.Math.Atan2(playerRelative.x, playerRelative.y) - rotation + System.Math.PI / 2);
+			inputLayer[7].Set = playerRelative.magnitude;
+
+
+			inputLayer[8].Set = 0.6f; // Magic synapse
 
 			// Update outputs
-			Calc();
-
-			Debug.Log("Perceptron " + outputs[0].ToString() + " " + outputs[1].ToString());
+			Calc(); 
 
 			// Accept outputs
 			float dt = Time.deltaTime;
-			rot += outputs[0] * dt;
-			x -= outputs[1] * (float)System.Math.Sin(rot) * dt;
-			y += outputs[1] * (float)System.Math.Cos(rot) * dt;
-			if (x > 5)
-				x = 5;
-			if (x < -5)
-				x = -5;
-			if (y > 5)
-				y = 5;
-			if (y < -5)
-				y = -5;
+			direction += outputLayer[0].Result * dt;
+			x -= outputLayer[1].Result * (float)System.Math.Sin(direction) * dt;
+			y += outputLayer[1].Result * (float)System.Math.Cos(direction) * dt;
+			rotation += outputLayer[2].Result * dt;
 			
-			Debug.Log(dt.ToString() + "    " + x.ToString() + " " + y.ToString());
+			while (rotation < -System.Math.PI)
+				rotation += (float)System.Math.PI * 2;
+			while (rotation > System.Math.PI)
+				rotation -= (float)System.Math.PI * 2;
+			while (direction < -System.Math.PI)
+				direction += (float)System.Math.PI * 2;
+			while (direction > System.Math.PI)
+				direction -= (float)System.Math.PI * 2;
+			if (x > 2)
+				x = 2;
+			if (x < -2)
+				x = -2;
+			if (y > 2)
+				y = 2;
+			if (y < -2)
+				y = -2;
 
 			// Affect to GameObject
 			this.gameObject.transform.position = new Vector3(x, y, 0);
-			this.gameObject.transform.rotation = new Quaternion(0, 0, 180.0f * rot / (float)System.Math.PI, 0);
-			//this.gameObject.transform.rotation = Quaternion(0, 0, 180.0f * rot / (float)System.Math.PI, 0);
+			this.gameObject.transform.eulerAngles = new Vector3(0, 0, 180.0f * rotation / (float)System.Math.PI);
 		}
 	}
 	
-	
-	public void SetWeight(int inputIndex, int outputIndex, float value) {
-		weights[inputIndex % inputs.Length + (outputIndex % outputs.Length) * inputs.Length] = value;
-	}
-	public float GetWeight(int inputIndex, int outputIndex) {
-		return weights[inputIndex % inputs.Length + (outputIndex % outputs.Length) * inputs.Length];
-	}
+    void OnMouseDown()
+    {
+		CauseDamage(150.0f);
+    }
 
-	private static float Sigmoid(float value) {
-		float k = System.Convert.ToSingle(System.Math.Exp(value));
-		return k / (1.0f + k);
+	void CauseDamage(float dmg) {
+		health -= dmg;
+	}
+	
+	
+	public void SetWeight(int synapseIndex, int outputIndex, float value) {
+		if ((outputIndex >= EnemyPerceptronTopology.InputLayerSize) && (outputIndex < perceptron.Length))
+			((Neuron)perceptron[outputIndex])[synapseIndex] = value;
+	}
+	public float GetWeight(int synapseIndex, int outputIndex) {
+		if ((outputIndex >= EnemyPerceptronTopology.InputLayerSize) && (outputIndex < perceptron.Length))
+			return ((Neuron)perceptron[outputIndex])[synapseIndex];
+		return 0.0f;
 	}
 
 	private void Calc() {
-		for (int i = 0; i < outputs.Length; i++) {
-			float value = 0.0f;
-			for (int j = 0; j < inputs.Length; j++) {
-				value += inputs[j] * GetWeight(j, i);
-			}
-			outputs[i] = Sigmoid(value);
-		}
+		foreach (NeuralCell nc in perceptron)
+			nc.Calc();
 	}
 }

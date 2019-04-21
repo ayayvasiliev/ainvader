@@ -12,11 +12,17 @@ public class PlayerMovement : MonoBehaviour {
     private bool right= false;
     private bool top = false;
     private bool bottom = false;
+    
+    private GameObject topBorder, leftBorder, rightBorder, bottomBorder;
 
     private void Start()
     {
         lastVector.x = 0;
         lastVector.y = -1;
+        topBorder = GameObject.Find("TopBorderForPlayer");
+        leftBorder = GameObject.Find("LeftBorderForPlayer");
+        rightBorder = GameObject.Find("RightBorderForPlayer");
+        bottomBorder = GameObject.Find("BottomBorderForPlayer");
     }
 
     void OnGUI() {
@@ -90,5 +96,14 @@ public class PlayerMovement : MonoBehaviour {
         }
 
         transform.position = transform.position + movement * Time.deltaTime * speed;
+
+        if (this.transform.position.x < leftBorder.transform.position.x)
+            this.transform.position = new Vector3(leftBorder.transform.position.x, transform.position.y, 0);
+        if (this.transform.position.x > rightBorder.transform.position.x)
+            this.transform.position = new Vector3(rightBorder.transform.position.x, transform.position.y, 0);
+        if (this.transform.position.y > topBorder.transform.position.y)
+            this.transform.position = new Vector3(transform.position.x, topBorder.transform.position.y, 0);
+        if (this.transform.position.y < bottomBorder.transform.position.y)
+            this.transform.position = new Vector3(transform.position.x, bottomBorder.transform.position.y, 0);
     }
 }

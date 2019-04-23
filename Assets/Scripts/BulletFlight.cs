@@ -8,7 +8,7 @@ public class BulletFlight : MonoBehaviour {
     public float bulletSpeed;
     public float bulletDamage;
     
-    private GameObject topBorder, leftBorder, rightBorder, bottomBorder;
+    private GameObject topBorder = null, leftBorder = null, rightBorder = null, bottomBorder = null;
     
     void Start() {
         topBorder = GameObject.Find("TopBorder");

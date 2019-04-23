@@ -18,11 +18,15 @@ public class EnemyBehaviour : MonoBehaviour {
 	private float direction = 0.0f;
 	private float x = 0.0f, y = 0.0f;
 
-
+    
 	static private float width = 2.0f, height = 2.0f;
 
+    // NEW
+    public Animator animator;
+    private Vector3 movement;
 
-	public void Init() {
+
+    public void Init() {
 		inited = true;
 	}
 
@@ -109,8 +113,14 @@ public class EnemyBehaviour : MonoBehaviour {
 			// Affect to GameObject
 			this.gameObject.transform.position = new Vector3(x, y, 0);
 			this.gameObject.transform.eulerAngles = new Vector3(0, 0, 180.0f * rotation / (float)System.Math.PI);
-		}
-	}
+
+            // NEW
+            
+            animator.SetFloat("moveX", this.gameObject.transform.position.x);
+            animator.SetFloat("moveY", this.gameObject.transform.position.y);
+            Debug.Log("туц");
+        }
+    }
 	
     void OnMouseDown()
     {

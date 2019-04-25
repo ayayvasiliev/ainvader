@@ -112,12 +112,12 @@ public class EnemyBehaviour : MonoBehaviour {
 
 			// Affect to GameObject
 			this.gameObject.transform.position = new Vector3(x, y, 0);
-			this.gameObject.transform.eulerAngles = new Vector3(0, 0, 180.0f * rotation / (float)System.Math.PI);
+			//this.gameObject.transform.eulerAngles = new Vector3(0, 0, 180.0f * rotation / (float)System.Math.PI);
 
             // NEW
             
-            animator.SetFloat("moveX", this.gameObject.transform.position.x);
-            animator.SetFloat("moveY", this.gameObject.transform.position.y);
+            animator.SetFloat("moveX", -(float)System.Math.Sin(direction));
+            animator.SetFloat("moveY", (float)System.Math.Cos(direction));
             Debug.Log("туц");
         }
     }

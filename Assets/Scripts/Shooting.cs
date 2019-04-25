@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Shooting : MonoBehaviour {
 
-    public float fireRate = 3;
+    public float fireRate = 100;
 
     float timeUntilFire = 0;
 
